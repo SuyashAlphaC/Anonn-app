@@ -49,7 +49,6 @@ const { data: savedData = [], isLoading: postsLoading } = useQuery({
   },
 });
 
-console.log("sa", savedData)
   // Separate posts by type when data arrives
   useEffect(() => {
     if (savedData) {

@@ -23,7 +23,6 @@ import {
 import { Link, useLocation } from "wouter";
 import { motion, LayoutGroup } from "framer-motion";
 import { apiRequest } from "@/lib/queryClient";
-import type { Bowl, Organization, BowlFollow } from "@shared/schema";
 import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarProps {
@@ -98,23 +97,10 @@ useEffect(() => {
       localStorage.setItem('bowl-favorites', JSON.stringify(Array.from(serverFavoritesSet)));
     }
   }, [serverFavorites]);
-  
-  const { data: bowls, isLoading: bowlsLoading } = useQuery<Bowl[]>({
-    queryKey: ["/api/bowls"],
-    retry: false,
-  });
 
-  const { data: organizations, isLoading: orgsLoading } = useQuery<Organization[]>({
-    queryKey: ["/api/organizations"],
-    retry: false,
-  });
 
-  // Get user's followed bowls
-  const { data: userBowls } = useQuery<(BowlFollow & { bowl: Bowl })[]>({
-    queryKey: ["/api/user/bowls"],
-    retry: false,
-  });
 
+ 
   // Get notifications for unseen count
   const { data: notifications } = useQuery<Array<{ id: number; read: boolean }>>({
     queryKey: ["/api/notifications"],
@@ -124,53 +110,7 @@ useEffect(() => {
   // Calculate unseen notification count
   const unseenNotificationCount = notifications?.filter(n => !n.read).length || 0;
 
-  // Mutation for updating favorites
-  const updateFavoriteMutation = useMutation({
-    mutationFn: async ({ bowlId, isFavorite }: { bowlId: number; isFavorite: boolean }) => {
-      console.log('[Sidebar] Updating favorite:', { bowlId, isFavorite });
-      await apiRequest('POST', '/api/user/favorites', { bowlId, isFavorite });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/user/bowls"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/user/favorites"] });
-    },
-    onError: (error) => {
-      console.error('[Sidebar] Error updating favorite:', error);
-    },
-  });
 
-  const handleFavorite = (bowlId: number) => {
-    console.log('[Sidebar] handleFavorite called for bowlId:', bowlId);
-    const isCurrentlyFavorite = favorites.has(bowlId);
-    console.log('[Sidebar] Current favorite state:', isCurrentlyFavorite);
-    
-    const newFavorites = new Set(favorites);
-    
-    if (isCurrentlyFavorite) {
-      newFavorites.delete(bowlId);
-    } else {
-      newFavorites.add(bowlId);
-    }
-    
-    setFavorites(newFavorites);
-    localStorage.setItem('bowl-favorites', JSON.stringify(Array.from(newFavorites)));
-    updateFavoriteMutation.mutate({ bowlId, isFavorite: !isCurrentlyFavorite });
-  };
-
-  // Sort user bowls to show favorites first, then by most recently followed
-  const sortedUserBowls = userBowls ? [...userBowls].sort((a, b) => {
-    const aIsFavorite = favorites.has(a.bowl.id);
-    const bIsFavorite = favorites.has(b.bowl.id);
-    
-    if (aIsFavorite && !bIsFavorite) return -1;
-    if (!aIsFavorite && bIsFavorite) return 1;
-    
-    if (a.followedAt && b.followedAt) {
-      return new Date(b.followedAt).getTime() - new Date(a.followedAt).getTime();
-    }
-    
-    return 0;
-  }) : [];
 
   // Main navigation items
   const sidebarItems: Array<{
@@ -188,8 +128,6 @@ useEffect(() => {
   ];
 
   const [showHot, setShowHot] = useState(!isMobile); // Auto-collapse hot section on mobile
-  const [showRecent, setShowRecent] = useState(!isMobile);
-  const [showCommunities, setShowCommunities] = useState(!isMobile);
 
   const hotTopics = [
     "When will the Government shutdown end?",
@@ -260,8 +198,6 @@ const handleLogout = async () => {
       setShowHot(true);
     }
   }, [isOpen, isMobile]);
-  
-  console.log("isMobile:", isMobile, "isOpen:", isOpen, "window width:", window.innerWidth);
 
   return (
     <div className={` bg-black border-r border-gray-800 pt-4 flex flex-col h-full transition-all duration-300 ${

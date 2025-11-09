@@ -89,7 +89,7 @@ export default function PostCard({
   // === BOOKMARK STATE ===
   const [isSaved, setIsSaved] = useState(false);
   const [isCheckingSaved, setIsCheckingSaved] = useState(false);
-  console.log("post", post)
+
   // Check if post is saved on mount and when user changes
   useEffect(() => {
     const checkSavedStatus = async () => {
@@ -388,34 +388,37 @@ export default function PostCard({
   return (
     <article
       className={`
-        bg-black border border-gray-600 max-w-full overflow-hidden
+        bg-[#EAEAEA05] border border-[#525252] max-w-full overflow-hidden
         ${index % 5 === 0 && index > 0 ? 'animate-post-reveal' : ''}
       `}
     > 
 
       {/* Header Section - Responsive */}
-      <div className="px-3 md:px-4 py-2 md:py-3 bg-[#505050] flex items-center justify-between">
-        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1 mr-2">
+      <div className="px-3 md:px-4 text-[#8E8E93] bg-[#525252] flex items-center justify-between">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
           <span 
-            className="text-white text-sm md:text-base font-normal underline cursor-pointer hover:text-gray-200 transition-colors truncate"
+            className=" text-sm md:text-base font-normal underline cursor-pointer hover:text-gray-200 transition-colors truncate"
             onClick={handleAuthorClick}
           >
             {getAuthorDisplay()}
           </span>
           
-          <div className="bg-green-500 rounded-sm p-0.5 md:p-1 flex items-center justify-center flex-shrink-0">
-            <ThumbsUp className="w-2.5 h-2.5 md:w-3 md:h-3 fill-white text-white" />
+          <div className=" p-0.5 md:p-1 flex items-center justify-center flex-shrink-0">
+            <ThumbsUp className="w-3 h-3 md:w-4 md:h-4 fill-green-500 text-green-500" />
           </div>
-          
-          <div className="bg-green-400 rounded-sm p-1 md:p-1.5 flex items-center justify-center flex-shrink-0">
-            <svg className="w-3 h-3 md:w-3.5 md:h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 2L4 6v6c0 5.5 3.8 10.7 8 12 4.2-1.3 8-6.5 8-12V6l-8-4z"/>
-            </svg>
+    
+          {/* Company Logo  */}
+          <div className="h-full flex items-center flex-shrink-0">
+            <img 
+              src="https://imgs.search.brave.com/O1Zt--extN2ycg7i7yz2onbxwTR0GTuweYkfqMzih2U/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pLnBp/bmltZy5jb20vb3Jp/Z2luYWxzLzJjL2E2/Lzg4LzJjYTY4OGY5/ZGI4NDJhYjQ1MTY3/YmZlYjBlZmQ4OGJj/LmpwZw" 
+              alt="company logo" 
+              className="h-6 md:h-10 object-cover"
+            />
           </div>
         </div>
 
         <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
-          <span className="text-gray-300 text-xs md:text-sm">{formatTimeAgo(post.createdAt)}</span>
+          <span className=" text-xs md:text-sm">{formatTimeAgo(post.createdAt)}</span>
           
           {(() => {
               return user?.id && post.author?.id && (user.id === post.author.id || user.id === post.author.id.toString()) && (
@@ -444,17 +447,17 @@ export default function PostCard({
 
       {/* Main Content Area - Responsive */}
       <div 
-        className="px-4 md:px-6 py-4 md:py-6 cursor-pointer bg-black"
+        className="px-4 md:px-6 py-4 md:py-6 cursor-pointer"
         onClick={handlePostClick}
       >
-        <h3 className="text-lg md:text-xl font-normal text-white mb-3 md:mb-4 leading-normal">
+        <h3 className="text-lg md:text-xl font-normal text-[#E8EAE9] mb-3 md:mb-4 leading-normal">
           {post.title}
         </h3>
 
         {post.type === 'poll' ? (
             <div className="mb-3">
               <div
-                className="bg-[#4a4a4a] border border-gray-600 rounded-lg p-3 md:p-4 hover:shadow-md transition-all duration-300"
+                className=" rounded-lg py-3 md:p-4 hover:shadow-md transition-all duration-300"
                 onClick={(e) => {
                   e.stopPropagation();
                   handlePollClick();
@@ -462,20 +465,20 @@ export default function PostCard({
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 md:space-x-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 md:w-10 md:h-10  rounded-full flex items-center justify-center flex-shrink-0">
                       <BarChart3 className="w-4 h-4 md:w-5 md:h-5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-white text-sm md:text-base">Interactive Poll</h3>
-                      <div className="text-xs md:text-sm text-gray-400 line-clamp-2">
+                      <div className="text-xs md:text-sm text-[#8E8E93] line-clamp-2">
                         <MarkdownRenderer
                           content={post.content.length > 120 ? post.content.substring(0, 120) + '...' : post.content}
-                          className="text-xs md:text-sm text-gray-400"
+                          className="text-xs md:text-sm text-[#8E8E93]"
                         />
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center space-x-1 md:space-x-2 text-blue-400 flex-shrink-0 ml-2">
+                  <div className="flex items-center p-2 rounded-sm space-x-1 md:space-x-2 hover:bg-gray-900 hover:text-blue-500 text-blue-400 flex-shrink-0 ml-2">
                     <span className="text-xs md:text-sm font-medium hidden sm:inline">Vote Now</span>
                     <ChevronRight className="w-3 h-3 md:w-4 md:h-4" />
                   </div>
@@ -491,7 +494,7 @@ export default function PostCard({
                 />
               </div>
               {shouldTruncate && !isExpanded && (
-                <button className="text-gray-500 text-xs md:text-sm hover:text-gray-400 transition-colors mt-2 md:mt-3 block">
+                <button className="text-[#525252] text-xs md:text-sm hover:text-gray-400 transition-colors mt-2 md:mt-3 block">
                   Read more ....
                 </button>
               )}
@@ -510,7 +513,7 @@ export default function PostCard({
       </div>
 
       {/* Footer Actions - Responsive */}
-      <div className="flex items-stretch bg-black border-t border-gray-600">
+      <div className="flex items-stretch border-t border-[#525252]">
         
         {/* Left Side - Upvote/Downvote */}
         <div className="flex items-stretch" onClick={(e) => e.stopPropagation()}>
@@ -588,10 +591,10 @@ export default function PostCard({
               handleBookmark();
             }}
             disabled={bookmarkMutation.isPending || isCheckingSaved}
-            className={`flex items-center justify-center px-4 md:px-8 py-3 md:py-4 transition-colors ${
+            className={`flex items-center justify-center px-4 md:px-8 py-3 md:py-4 transition-colors hover:bg-gray-800/50 ${
               isSaved
-                ? "text-blue-500 bg-blue-500/5"
-                : "text-white hover:bg-gray-800/50"
+                ? "text-blue-500"
+                : "text-white "
             } ${(bookmarkMutation.isPending || isCheckingSaved) ? "opacity-75 cursor-not-allowed" : ""}`}
           >
             {bookmarkMutation.isPending ? (

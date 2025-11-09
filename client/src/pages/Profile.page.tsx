@@ -1,5 +1,5 @@
 import { useCallback, useState, useEffect } from "react";
-import { Users, MessageSquare, BarChart3, Menu, X, MinusCircle } from "lucide-react";
+import { Users, MessageSquare, BarChart3, Menu, X, MinusCircle, Triangle, Share2, Bookmark, ArrowUp, ArrowDown, UserPlus, FileText } from "lucide-react";
 import PostCard from "../components/PostCard";
 import { InfiniteScrollSkeleton } from "@/components/InfiniteScrollLoader";
 import { PostWithDetails, Bowl, CommentWithDetails } from "@shared/schema";
@@ -196,8 +196,169 @@ export default function ProfilePage({
   const renderTabContent = () => {
     if (activeTab === "whistle") {
       return (
-        <div className="flex items-center justify-center py-20 px-4">
-          <p className="text-gray-400 text-sm text-center">[ IN APP REWARD SYSTEM OF ANONN WHICH TRANSLATE TO THE AIRDROPS ]</p>
+        <div className="px-4 py-6 space-y-6">
+          {/* Header with Leaderboard and How It Works */}
+          <div className="flex items-center justify-between mb-6">
+            <button className="px-6 py-2 bg-transparent text-gray-600 text-sm font-medium tracking-wide cursor-not-allowed flex items-center gap-2">
+              <BarChart3 className="w-4 h-4" />
+              LEADERBOARD
+            </button>
+            <button className="px-6 py-2 bg-[#f5f5f5] text-[#525252] text-sm font-medium tracking-wide hover:bg-gray-200 transition-colors flex items-center gap-2">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2L12 22M12 2L5 9M12 2L19 9" />
+              </svg>
+              HOW IT WORKS
+            </button>
+          </div>
+
+          {/* Info Box */}
+          <div className="bg-[#1e3a5f] border-l-4 border-blue-400 p-4 mb-6">
+            <p className="text-blue-100 text-sm leading-relaxed">
+              Everything that you do at anonn generates you points thats everything from a comment to upvote to invite and posting. This translates directly to the <span className="font-semibold">airdrop</span> you will receive
+            </p>
+          </div>
+
+          {/* Activity Points Table */}
+          <div className="bg-[#1a1a1a] border border-gray-700 rounded-lg overflow-hidden">
+            {/* Table Headers */}
+            <div className="grid grid-cols-2 bg-[#0e0e0e] border-b border-gray-700">
+              <div className="px-6 py-3 text-gray-400 text-sm font-medium tracking-wide">
+                Activity
+              </div>
+              <div className="px-6 py-3 text-gray-400 text-sm font-medium tracking-wide text-right">
+                Points
+              </div>
+            </div>
+
+            {/* Activity Rows */}
+            <div className="divide-y divide-gray-700">
+              {/* Invite Others */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <UserPlus className="w-5 h-5 text-gray-400" />
+                  <span>invite others</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>100</span>
+                </div>
+              </div>
+
+              {/* Create Post */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <FileText className="w-5 h-5 text-gray-400" />
+                  <span>create post</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>20</span>
+                </div>
+              </div>
+
+              {/* Create Poll */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <BarChart3 className="w-5 h-5 text-gray-400" />
+                  <span>create poll</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>20</span>
+                </div>
+              </div>
+
+              {/* Rate Company */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <Triangle className="w-5 h-5 text-gray-400" />
+                  <span>rate company</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>50</span>
+                </div>
+              </div>
+
+              {/* Comment Received/Given */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <MessageSquare className="w-5 h-5 text-gray-400" />
+                  <span>comment received / given</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>10</span>
+                </div>
+              </div>
+
+              {/* Upvote Received/Given */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <ArrowUp className="w-5 h-5 text-gray-400" />
+                  <span>upvote received / given</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>5</span>
+                </div>
+              </div>
+
+              {/* Downvote Received/Given */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <ArrowDown className="w-5 h-5 text-gray-400" />
+                  <span>downvote received / given</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>5</span>
+                </div>
+              </div>
+
+              {/* Share Post/Poll */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <Share2 className="w-5 h-5 text-gray-400" />
+                  <span>share post/poll</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>10</span>
+                </div>
+              </div>
+
+              {/* Bookmark Received/Given */}
+              <div className="grid grid-cols-2 px-6 py-4 hover:bg-[#222222] transition-colors">
+                <div className="flex items-center gap-3 text-white text-sm">
+                  <Bookmark className="w-5 h-5 text-gray-400" />
+                  <span>bookmark received / given</span>
+                </div>
+                <div className="flex items-center justify-end gap-2 text-blue-400 text-base font-semibold">
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/>
+                  </svg>
+                  <span>5</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       );
     }

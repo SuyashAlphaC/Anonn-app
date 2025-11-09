@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { 
   X, 
@@ -14,7 +14,12 @@ import {
   ChevronDown,
   Users,
   Building,
-  Search
+  Search,
+  Image,
+  Quote,
+  AlignLeft,
+  AlignCenter,
+  AlignRight
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -45,6 +50,30 @@ interface PollOption {
 type PostType = "text" | "poll";
 type CreateStep = "select" | "create";
 
+// Text formatting utility functions
+const formatText = (command: string, value: string = '') => {
+  document.execCommand(command, false, value);
+  document.getElementById('content-editable')?.focus();
+};
+
+const insertImage = () => {
+  const url = prompt('Enter image URL:');
+  if (url) {
+    formatText('insertImage', url);
+  }
+};
+
+const createLink = () => {
+  const url = prompt('Enter URL:');
+  if (url) {
+    formatText('createLink', url);
+  }
+};
+
+const insertEmoji = (emoji: string) => {
+  formatText('insertText', emoji);
+};
+
 export default function CreatePost() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
@@ -68,6 +97,9 @@ export default function CreatePost() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCreateOrganizationModal, setShowCreateOrganizationModal] = useState(false);
   const [organizationToCreate, setOrganizationToCreate] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const contentEditableRef = useRef<HTMLDivElement>(null);
 
   const { data: bowls } = useQuery<Bowl[]>({
     queryKey: ["bowls"],
@@ -100,6 +132,15 @@ export default function CreatePost() {
       if (bowl) setSelectedBowl(bowl);
     }
   }, [bowls]);
+
+  // Common emojis for quick access
+  const commonEmojis = ['😊', '😂', '❤️', '🔥', '👍', '👎', '🎉', '🙏', '🤔', '👀'];
+
+  const handleContentChange = () => {
+    if (contentEditableRef.current) {
+      setContent(contentEditableRef.current.innerHTML);
+    }
+  };
 
   const filteredBowls = bowls?.filter(bowl =>
     bowl.name.toLowerCase().includes(bowlSearch.toLowerCase()) ||
@@ -185,15 +226,19 @@ export default function CreatePost() {
     setIsSubmitting(true);
 
     try {
+      // For rich text content, we need to handle HTML properly
+      const postContent = content.trim() || contentEditableRef.current?.innerText || '';
+
       const postData = {
         title: title.trim(),
-        content: content.trim(),
+        content: postContent,
+        htmlContent: content, // Store the HTML content for rich text
         bowlId: selectedBowl.id,
         organizationId: selectedCompany?.id,
         type: postType === "poll" ? "poll" : "discussion",
         poll: postType === "poll" ? {
           title: title.trim(),
-          description: content.trim(),
+          description: postContent,
           options: pollOptions.map(opt => opt.text),
           allowMultipleSelections: false
         } : null
@@ -221,6 +266,8 @@ export default function CreatePost() {
       setIsSubmitting(false);
     }
   };
+
+  // Rest of the component remains the same until the text formatting section...
 
   if (step === "select") {
     return (
@@ -344,35 +391,152 @@ export default function CreatePost() {
 
           <div className="border border-gray-700 p-4">
             <label className="text-gray-600 text-xs mb-2 block">BODY</label>
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
+            
+            {/* Content Editable Area for Rich Text */}
+            <div
+              ref={contentEditableRef}
+              id="content-editable"
+              contentEditable
+              onInput={handleContentChange}
               placeholder=". ."
-              className="w-full bg-transparent text-white outline-none placeholder-gray-700 min-h-[100px] resize-none"
+              className="w-full bg-transparent text-white outline-none placeholder-gray-700 min-h-[100px] resize-none focus:outline-none focus:ring-0"
+              style={{ 
+                caretColor: 'white',
+                lineHeight: '1.5'
+              }}
             />
             
             {postType === "text" && (
-              <div className="flex items-center gap-4 mt-4 pt-4 border-t border-gray-700">
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Bold className="w-5 h-5" />
+              <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-700 flex-wrap">
+                {/* Text Formatting Buttons */}
+                <button 
+                  onClick={() => formatText('bold')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Bold"
+                >
+                  <Bold className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Italic className="w-5 h-5" />
+                <button 
+                  onClick={() => formatText('italic')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Italic"
+                >
+                  <Italic className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Underline className="w-5 h-5" />
+                <button 
+                  onClick={() => formatText('underline')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Underline"
+                >
+                  <Underline className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <List className="w-5 h-5" />
+                
+                {/* Lists */}
+                <button 
+                  onClick={() => formatText('insertUnorderedList')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Bullet List"
+                >
+                  <List className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Code className="w-5 h-5" />
+                <button 
+                  onClick={() => formatText('insertOrderedList')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Numbered List"
+                >
+                  <List className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <LinkIcon className="w-5 h-5" />
+                
+                {/* Code & Quote */}
+                <button 
+                  onClick={() => formatText('formatBlock', '<pre>')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Code Block"
+                >
+                  <Code className="w-4 h-4" />
                 </button>
-                <button className="text-gray-400 hover:text-white transition-colors">
-                  <Smile className="w-5 h-5" />
+                <button 
+                  onClick={() => formatText('formatBlock', '<blockquote>')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Quote"
+                >
+                  <Quote className="w-4 h-4" />
+                </button>
+                
+                {/* Link & Image */}
+                <button 
+                  onClick={createLink}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Insert Link"
+                >
+                  <LinkIcon className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={insertImage}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Insert Image"
+                >
+                  <Image className="w-4 h-4" />
+                </button>
+                
+                {/* Text Alignment */}
+                <button 
+                  onClick={() => formatText('justifyLeft')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Align Left"
+                >
+                  <AlignLeft className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => formatText('justifyCenter')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Align Center"
+                >
+                  <AlignCenter className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => formatText('justifyRight')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                  title="Align Right"
+                >
+                  <AlignRight className="w-4 h-4" />
+                </button>
+                
+                {/* Emoji Picker */}
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700"
+                    title="Insert Emoji"
+                  >
+                    <Smile className="w-4 h-4" />
+                  </button>
+                  
+                  {showEmojiPicker && (
+                    <div className="absolute bottom-full left-0 mb-2 bg-[#2a2a2a] border border-gray-600 rounded-lg p-2 grid grid-cols-5 gap-1 z-10">
+                      {commonEmojis.map((emoji, index) => (
+                        <button
+                          key={index}
+                          onClick={() => {
+                            insertEmoji(emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          className="w-8 h-8 flex items-center justify-center hover:bg-gray-600 rounded text-lg"
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Clear Formatting */}
+                <button 
+                  onClick={() => formatText('removeFormat')}
+                  className="text-gray-400 hover:text-white transition-colors p-2 rounded hover:bg-gray-700 text-xs font-medium"
+                  title="Clear Formatting"
+                >
+                  Clear
                 </button>
               </div>
             )}
@@ -412,20 +576,41 @@ export default function CreatePost() {
           )}
 
           {postType === "text" && (
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setShowCompanySearch(true)}
-                className="text-gray-600 hover:text-gray-400 transition-colors text-sm"
-              >
-                TAG A COMPANY
-              </button>
-              <button className="text-gray-600 hover:text-gray-400 transition-colors text-sm">
-                abstract...
-              </button>
-              <button className="ml-auto text-gray-600 hover:text-gray-400 transition-colors">
-                <Search className="w-5 h-5" />
-              </button>
-            </div>
+            <>
+              {/* Display selected company tag */}
+              {selectedCompany && (
+                <div className="border border-gray-700 p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Building className="w-4 h-4 text-blue-400" />
+                      <span className="text-white text-sm font-medium">{selectedCompany.name}</span>
+                    </div>
+                    <button
+                      onClick={() => setSelectedCompany(null)}
+                      className="text-gray-400 hover:text-red-400 transition-colors"
+                      title="Remove company tag"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowCompanySearch(true)}
+                  className="text-gray-600 hover:text-gray-400 transition-colors text-sm"
+                >
+                  TAG A COMPANY
+                </button>
+                <button className="text-gray-600 hover:text-gray-400 transition-colors text-sm">
+                  abstract...
+                </button>
+                <button className="ml-auto text-gray-600 hover:text-gray-400 transition-colors">
+                  <Search className="w-5 h-5" />
+                </button>
+              </div>
+            </>
           )}
         </div>
       </div>
@@ -454,6 +639,7 @@ export default function CreatePost() {
         </button>
       </div>
 
+      {/* Rest of the modals remain the same */}
       <AnimatePresence>
         {showBowlSelector && (
           <motion.div

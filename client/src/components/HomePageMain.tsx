@@ -3,7 +3,6 @@ import { useEffect, useState, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import SearchBar from "@/components/SearchBar";
 import FeedControls from "@/components/FeedControls";
-import PostFeed from "@/components/PostFeed";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { PostWithDetails } from "@shared/schema";

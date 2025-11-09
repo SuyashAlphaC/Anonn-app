@@ -1,5 +1,5 @@
 // components/BowlsMain.tsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -151,21 +151,59 @@ export default function BowlsPage({
     },
   });
 
-  const handleFollow = (bowlId: number) => {
+  // Authentication handler - similar to PostCard
+  const showAuthToast = useCallback((action: string) => {
+    toast({
+      title: "Authentication Required",
+      description: `Please connect your wallet to ${action}.`,
+      variant: "default",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const event = new CustomEvent('triggerWalletConnect');
+            window.dispatchEvent(event);
+          }}
+        >
+          Connect Wallet
+        </Button>
+      ),
+    });
+  }, [toast]);
+
+  const handleAuthRequired = useCallback((action: string, callback?: () => void) => {
+    if (!isAuthenticated) {
+      showAuthToast(action);
+      return false;
+    }
+    callback?.();
+    return true;
+  }, [isAuthenticated, showAuthToast]);
+
+  const handleFollow = useCallback((bowlId: number) => {
+    if (!handleAuthRequired("follow channels")) return;
     followMutation.mutate(bowlId);
-  };
+  }, [handleAuthRequired, followMutation]);
 
-  const handleUnfollow = (bowlId: number) => {
+  const handleUnfollow = useCallback((bowlId: number) => {
+    if (!handleAuthRequired("unfollow channels")) return;
     unfollowMutation.mutate(bowlId);
-  };
+  }, [handleAuthRequired, unfollowMutation]);
 
-const BowlCard = ({ bowl }: { bowl: BowlWithStats }) => {
-  const isFollowing = followingBowls.has(bowl.id);
+  // BowlCard component - defined inside parent to access auth handlers
+  const BowlCard = ({ bowl }: { bowl: BowlWithStats }) => {
+    const isFollowing = followingBowls.has(bowl.id);
+
+    const handleCardClick = () => {
+      if (!handleAuthRequired("view channel details")) return;
+      setLocation(`/bowls/${encodeURIComponent(bowl.name)}`);
+    };
 
   return (
     <div
-      className="bg-[#0e0e0e] border border-gray-700 rounded-md overflow-hidden hover:border-gray-600 transition-colors"
-      onClick={() => setLocation(`/bowls/${encodeURIComponent(bowl.name)}`)}
+      className="bg-[#0e0e0e] border border-gray-700 rounded-md overflow-hidden hover:border-gray-600 transition-colors cursor-pointer"
+      onClick={handleCardClick}
     >
       {/* Title & Description */}
       <div className="p-6 border-b border-gray-700">
@@ -220,9 +258,8 @@ const BowlCard = ({ bowl }: { bowl: BowlWithStats }) => {
         )}
       </button>
     </div>
-  );
-};
-
+    );
+  };
 
   if (bowlsLoading) {
     return (

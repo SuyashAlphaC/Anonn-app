@@ -142,72 +142,72 @@ function RouterWithLayout() {
   }
 
   // If not authenticated, show public routes with layout
-  if (!isAuthenticated) {
-    return (
-      <Switch>
-        <Route path="/auth">
-          <AuthPage />
-        </Route>
-        <Route path="/invite-required">
-          <InviteRequired />
-        </Route>
+  // if (!isAuthenticated) {
+  //   return (
+  //     <Switch>
+  //       <Route path="/auth">
+  //         <AuthPage />
+  //       </Route>
+  //       <Route path="/invite-required">
+  //         <InviteRequired />
+  //       </Route>
        
-        <Route path="/">
-        <MainLayout 
-          onCreatePost={handleCreatePost}
-          bowls={bowls}
-          organizations={organizations}
-        >
-          <HomePage
-            onCreatePost={handleCreatePost}
-            onExploreCommunities={() => setLocation("/bowls")}
-            isAuthenticated={isAuthenticated}/>
-        </MainLayout>
-      </Route>
+  //       <Route path="/">
+  //       <MainLayout 
+  //         onCreatePost={handleCreatePost}
+  //         bowls={bowls}
+  //         organizations={organizations}
+  //       >
+  //         <HomePage
+  //           onCreatePost={handleCreatePost}
+  //           onExploreCommunities={() => setLocation("/bowls")}
+  //           isAuthenticated={isAuthenticated}/>
+  //       </MainLayout>
+  //     </Route>
 
-      <Route path="/polls">
-        <MainLayout 
-          onCreatePost={handleCreatePost}
-          bowls={bowls}
-          organizations={organizations}
-        >
-          <PollsPage />
-        </MainLayout>
-      </Route>
+  //     <Route path="/polls">
+  //       <MainLayout 
+  //         onCreatePost={handleCreatePost}
+  //         bowls={bowls}
+  //         organizations={organizations}
+  //       >
+  //         <PollsPage />
+  //       </MainLayout>
+  //     </Route>
 
-        <Route path="/bowls">
-          <MainLayout 
-            onCreatePost={handleCreatePost}
-            bowls={bowls}
-            organizations={organizations}
-          >
-            <BowlsPage />
-          </MainLayout>
-        </Route>
+  //       <Route path="/bowls">
+  //         <MainLayout 
+  //           onCreatePost={handleCreatePost}
+  //           bowls={bowls}
+  //           organizations={organizations}
+  //         >
+  //           <BowlsPage />
+  //         </MainLayout>
+  //       </Route>
 
-        <Route path="/organizations">
-        <MainLayout 
-          onCreatePost={handleCreatePost}
-          bowls={bowls}
-          organizations={organizations}
-        >
-          <OrganizationsPage />
-        </MainLayout>
-      </Route>
-        <Route path="/*">
-          <MainLayout 
-            onCreatePost={handleCreatePost}
-            bowls={bowls}
-            organizations={organizations}
-          >
-            <div className="flex-1 flex items-center justify-center">
-              <NotFound />
-            </div>
-          </MainLayout>
-        </Route>
-      </Switch>
-    );
-  }
+  //       <Route path="/organizations">
+  //       <MainLayout 
+  //         onCreatePost={handleCreatePost}
+  //         bowls={bowls}
+  //         organizations={organizations}
+  //       >
+  //         <OrganizationsPage />
+  //       </MainLayout>
+  //     </Route>
+  //       <Route path="/*">
+  //         <MainLayout 
+  //           onCreatePost={handleCreatePost}
+  //           bowls={bowls}
+  //           organizations={organizations}
+  //         >
+  //           <div className="flex-1 flex items-center justify-center">
+  //             <NotFound />
+  //           </div>
+  //         </MainLayout>
+  //       </Route>
+  //     </Switch>
+  //   );
+  // }
 
   // Authenticated routes
   return (
@@ -292,41 +292,41 @@ function RouterWithLayout() {
       </Route>
 
       <Route path="/organizations/:id">
-        <ContentLayout 
+        <MainLayout 
           onCreatePost={handleCreatePost}
           bowls={bowls}
           organizations={organizations}
         >
           <OrganizationContent />
-        </ContentLayout>
+        </MainLayout>
       </Route>
 
       <Route path="/poll">
-        <ContentLayout 
+        <MainLayout 
           onCreatePost={handleCreatePost}
           bowls={bowls}
           organizations={organizations}
         >
           <PollPage />
-        </ContentLayout>
+        </MainLayout>
       </Route>
       <Route path="/post">
-        <ContentLayout 
+        <MainLayout 
           onCreatePost={handleCreatePost}
           bowls={bowls}
           organizations={organizations}
         >
           <PostContent />
-        </ContentLayout>
+        </MainLayout>
       </Route>
       <Route path="/bowls/:id">
-        <ContentLayout 
+        <MainLayout 
           onCreatePost={handleCreatePost}
           bowls={bowls}
           organizations={organizations}
         >
           <BowlContent />
-        </ContentLayout>
+        </MainLayout>
       </Route>
       
       {/* Routes without Layout */}

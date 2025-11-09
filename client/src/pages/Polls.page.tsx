@@ -86,17 +86,16 @@ export default function PollsPage({
         params.set("time", timeFilter);
       }
 
-      const response = await fetch(`/api/polls?${params.toString()}`, {
-        credentials: "include",
-      });
+      const response = await fetch(`/api/polls?${params.toString()}`, {
+        credentials: "include",
+      });
 
-      if (!response.ok) {
-        throw new Error(`${response.status}: ${response.statusText}`);
-      }
+      if (!response.ok) {
+        throw new Error(`${response.status}: ${response.statusText}`);
+      }
 
-      return response.json();
-    },
-    enabled: isAuthenticated,
+      return response.json();
+    },
   });
 
   // Vote mutation for polls
@@ -162,7 +161,38 @@ export default function PollsPage({
     },
   });
 
+  // Authentication handler - similar to PostCard
+  const showAuthToast = (action: string) => {
+    toast({
+      title: "Authentication Required",
+      description: `Please connect your wallet to ${action}.`,
+      variant: "default",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const event = new CustomEvent('triggerWalletConnect');
+            window.dispatchEvent(event);
+          }}
+        >
+          Connect Wallet
+        </Button>
+      ),
+    });
+  };
+
+  const handleAuthRequired = (action: string, callback?: () => void) => {
+    if (!isAuthenticated) {
+      showAuthToast(action);
+      return false;
+    }
+    callback?.();
+    return true;
+  };
+
   const handlePollVote = (pollId: number, voteType: "up" | "down") => {
+    if (!handleAuthRequired("vote on polls")) return;
     if (voteMutation.isPending) return;
 
     setAnimatingVote({ pollId, type: voteType });
@@ -189,6 +219,8 @@ export default function PollsPage({
   };
 
   const submitVote = async (pollId: number) => {
+    if (!handleAuthRequired("submit poll votes")) return;
+
     const selectedOptionIds = selectedOptions[pollId];
     if (!selectedOptionIds || selectedOptionIds.length === 0) return;
 
@@ -197,7 +229,9 @@ export default function PollsPage({
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${await (window as any).__getDynamicToken?.()}`,
+          Authorization: `Bearer ${await (
+            window as any
+          ).__getDynamicToken?.()}`,
         },
         body: JSON.stringify({ optionIds: selectedOptionIds }),
       });
@@ -216,9 +250,9 @@ export default function PollsPage({
   };
 
   const handleCreatePoll = () => {
+    if (!handleAuthRequired("create a poll")) return;
     window.location.href = "/create-post?type=poll";
   };
-  
 
   // ADD useMemo for FRONTEND SEARCH FILTERING ---
   const filteredPolls = useMemo(() => {
@@ -229,15 +263,17 @@ export default function PollsPage({
 
     const lowerCaseQuery = searchQuery.toLowerCase();
 
-    return polls.filter(poll => {
+    return polls.filter((poll) => {
       const titleMatch = poll.title.toLowerCase().includes(lowerCaseQuery);
-      const descMatch = poll.description?.toLowerCase().includes(lowerCaseQuery) || false;
-      const authorMatch = poll.author?.username?.toLowerCase().includes(lowerCaseQuery) || false;
+      const descMatch =
+        poll.description?.toLowerCase().includes(lowerCaseQuery) || false;
+      const authorMatch =
+        poll.author?.username?.toLowerCase().includes(lowerCaseQuery) || false;
 
       return titleMatch || descMatch || authorMatch;
     });
   }, [polls, searchQuery]); // Re-filters when API data or search query changes
-  console.log("filter", filteredPolls)
+  console.log("filter", filteredPolls);
   return (
     <div className="flex gap-6 max-w-[1600px] mx-auto px-4 py-6">
       {/* Center Feed */}
@@ -283,7 +319,7 @@ export default function PollsPage({
             <div className="bg-black border border-gray-800 rounded-lg overflow-hidden">
               <div className="text-center py-16 px-4">
                 <BarChart3 className="h-12 w-12 text-gray-600 mx-auto mb-4" />
-                {searchQuery ?(
+                {searchQuery ? (
                   <>
                     <h3 className="text-2xl font-bold text-gray-300 mb-3">
                       No results found
@@ -294,34 +330,30 @@ export default function PollsPage({
                   </>
                 ) : (
                   <>
-                  <h3 className="text-2xl font-bold text-gray-300 mb-3">
-                    No polls yet
-                  </h3>
-            
-                <p className="text-gray-500 text-lg mb-6 max-w-md mx-auto">
-                  Be the first to create a poll and see what the community
-                  thinks!
-                </p>
-                <Button
-                  onClick={handleCreatePoll}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg"
-                >
-                  <Plus className="h-5 w-5 mr-2" />
-                  Create Poll
-                </Button>
-                </>)}
+                    <h3 className="text-2xl font-bold text-gray-300 mb-3">
+                      No polls yet
+                    </h3>
+
+                    <p className="text-gray-500 text-lg mb-6 max-w-md mx-auto">
+                      Be the first to create a poll and see what the community
+                      thinks!
+                    </p>
+                    <Button
+                      onClick={handleCreatePoll}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg"
+                    >
+                      <Plus className="h-5 w-5 mr-2" />
+                      Create Poll
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           ) : (
             filteredPolls.map((poll: PollWithDetails) => {
               const userSelection = selectedOptions[poll.id] || [];
 
-              return (
-                <PollCard
-                  key={poll.id}
-                  poll={poll}
-                />
-              );
+              return <PollCard key={poll.id} poll={poll} />;
             })
           )}
         </div>

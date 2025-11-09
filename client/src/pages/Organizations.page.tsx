@@ -10,6 +10,7 @@ import { Building, Users, TrendingUp, Award } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import type { OrganizationWithStats } from "@shared/schema";
+import SearchBar from "@/components/SearchBar"; // Import the SearchBar component
 
 type TabType = "verified" | "recent" | "popular";
 
@@ -65,25 +66,48 @@ export default function OrganizationsPage() {
     },
   });
 
+  // Authentication handler - similar to PostCard
+  const showAuthToast = useCallback((action: string) => {
+    toast({
+      title: "Authentication Required",
+      description: `Please connect your wallet to ${action}.`,
+      variant: "default",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const event = new CustomEvent('triggerWalletConnect');
+            window.dispatchEvent(event);
+          }}
+        >
+          Connect Wallet
+        </Button>
+      ),
+    });
+  }, [toast]);
+
+  const handleAuthRequired = useCallback((action: string, callback?: () => void) => {
+    if (!isAuthenticated) {
+      showAuthToast(action);
+      return false;
+    }
+    callback?.();
+    return true;
+  }, [isAuthenticated, showAuthToast]);
+
   const handleTrustVote = useCallback((organizationId: number, trustVote: boolean, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (!isAuthenticated) {
-      toast({
-        title: "Authentication required",
-        description: "Please log in to vote.",
-        variant: "destructive",
-      });
-      return;
-    }
+
+    if (!handleAuthRequired("vote on organizations")) return;
 
     trustVoteMutation.mutate({ organizationId, trustVote });
-  }, [isAuthenticated, trustVoteMutation]);
+  }, [handleAuthRequired, trustVoteMutation]);
 
-  const handleSearch = () => {
-    // Search functionality
-    console.log("Searching for:", searchQuery);
+  // Handle search from SearchBar component
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
   };
 
   // Calculate trust percentage
@@ -124,6 +148,7 @@ export default function OrganizationsPage() {
       );
     }
 
+
     // Filter by tab
     switch (activeTab) {
       case "verified":
@@ -137,86 +162,97 @@ export default function OrganizationsPage() {
     }
   }, [organizations, searchQuery, activeTab]);
 
+  console.log("dsff",filteredOrganizations);
   const renderOrganizationCard = (org: OrganizationWithStats) => {
     const trustScores = getTrustPercentage(org);
     const memberCount = getMemberCount(org);
     const engagementCount = getEngagementCount(org);
     const activityPercentage = getActivityPercentage(org);
 
+    // Calculate total members for the avatar counter
+    const totalMembers = org.reviewCount ? org.reviewCount * 3 : 25;
+
+    const handleCardClick = (e: React.MouseEvent) => {
+      if (!handleAuthRequired("view organization details")) return;
+      window.location.href = `/organizations/${encodeURIComponent(org.name)}`;
+    };
+
     return (
-      <Link key={org.id} href={`/organizations/${encodeURIComponent(org.name)}`}>
-        <div className="bg-[#1a1a1a] hover:bg-[#222222] transition-all duration-200 p-6 mb-4 cursor-pointer border-b border-gray-800">
-          <div className="flex items-start justify-between">
+      <div
+        key={org.id}
+        onClick={handleCardClick}
+        className="bg-[#1a1a1a] hover:bg-[#222222] transition-all duration-200 p-8 mb-4 cursor-pointer border border-gray-800 rounded-lg"
+      >
+          <div className="flex items-start justify-between mb-6">
             {/* Left: Logo and Info */}
             <div className="flex items-start gap-6 flex-1">
               {/* Company Logo */}
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-500 rounded flex items-center justify-center flex-shrink-0">
-                <Building className="w-8 h-8 text-white" />
+              <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Building className="w-12 h-12 text-white" />
               </div>
 
               {/* Company Info */}
-              <div className="flex-1">
-                <h3 className="text-white text-lg font-normal mb-2">{org.name}</h3>
-                <p className="text-gray-500 text-sm leading-relaxed line-clamp-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-white text-2xl font-normal mb-3">{org.name}</h3>
+                <p className="text-gray-400 text-base leading-relaxed line-clamp-2 max-w-2xl">
                   {org.description || "Welcome to the Web3 Privacy Collective, a community focused on privacy in the decentralized web. We unite enthusiasts and developers who believe privacy is a funda..."}
                 </p>
-
-                {/* Stats */}
-                <div className="flex items-center gap-6 mt-4 text-gray-600 text-sm">
-                  <div className="flex items-center gap-1">
-                    <Users className="w-4 h-4" />
-                    <span>{memberCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <TrendingUp className="w-4 h-4" />
-                    <span>{engagementCount}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Award className="w-4 h-4" />
-                    <span>{activityPercentage}%</span>
-                  </div>
-                </div>
               </div>
             </div>
 
             {/* Right: Avatars and Trust Scores */}
-            <div className="flex items-center gap-4 flex-shrink-0">
+            <div className="flex items-start gap-6 flex-shrink-0">
               {/* Member Avatars */}
-              <div className="flex -space-x-2">
-                {[1, 2, 3, 4].map((i) => (
+              <div className="flex items-center -space-x-3">
+                {[1, 2, 3].map((i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-[#1a1a1a] flex items-center justify-center"
+                    className="w-12 h-12 rounded-full bg-gradient-to-br from-gray-600 to-gray-700 border-2 border-[#1a1a1a] flex items-center justify-center overflow-hidden"
                   >
-                    <span className="text-white text-xs font-semibold">{i}</span>
+                    <Users className="w-6 h-6 text-gray-300" />
                   </div>
                 ))}
-                <div className="w-8 h-8 rounded-full bg-gray-800 border-2 border-[#1a1a1a] flex items-center justify-center">
-                  <span className="text-gray-400 text-xs">+5</span>
+                <div className="w-12 h-12 rounded-full bg-white border-2 border-[#1a1a1a] flex items-center justify-center">
+                  <span className="text-gray-800 text-base font-semibold">+{totalMembers}</span>
                 </div>
               </div>
 
               {/* Trust/Distrust Badges */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={(e) => handleTrustVote(org.id, true, e)}
                   disabled={trustVoteMutation.isPending}
-                  className="bg-green-500 hover:bg-green-600 transition-colors px-4 py-1 rounded text-white font-semibold text-sm disabled:opacity-50"
+                  className="bg-green-500 hover:bg-green-600 transition-colors px-6 py-2 rounded text-white font-bold text-xl disabled:opacity-50 min-w-[70px] text-center"
                 >
                   {trustScores.trust}
                 </button>
                 <button
                   onClick={(e) => handleTrustVote(org.id, false, e)}
                   disabled={trustVoteMutation.isPending}
-                  className="bg-red-500 hover:bg-red-600 transition-colors px-4 py-1 rounded text-white font-semibold text-sm disabled:opacity-50"
+                  className="bg-red-500 hover:bg-red-600 transition-colors px-6 py-2 rounded text-white font-bold text-xl disabled:opacity-50 min-w-[70px] text-center"
                 >
                   {trustScores.distrust}
                 </button>
               </div>
             </div>
           </div>
+
+        {/* Stats Row at Bottom */}
+        <div className="flex items-center gap-8 text-gray-500 text-base pl-[120px]">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            <span className="font-medium">{memberCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <TrendingUp className="w-5 h-5" />
+            <span className="font-medium">{engagementCount}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Award className="w-5 h-5" />
+            <span className="font-medium">{activityPercentage}K</span>
+          </div>
         </div>
-      </Link>
+      </div>
     );
   };
 
@@ -240,16 +276,16 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="w-full min-h-screen bg-black text-white px-4 pt-6 pb-6">
+    <div className="w-full min-h-screen px-4 pt-6 pb-6">
       <div className="max-w-4xl mx-auto">
         {/* Tabs */}
-        <div className="flex items-center gap-3 mb-6">
+        <div className="flex items-center text-[#525252] gap-3 mb-6">
           <button
             onClick={() => setActiveTab("verified")}
             className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
               activeTab === "verified"
-                ? "bg-white text-black"
-                : "bg-transparent text-gray-500 hover:text-gray-300"
+                ? "bg-[#E8EAE9]"
+                : "bg-[#1B1C20] hover:bg-[#E8EAE9]"
             }`}
           >
             VERIFIED
@@ -258,8 +294,8 @@ export default function OrganizationsPage() {
             onClick={() => setActiveTab("recent")}
             className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
               activeTab === "recent"
-                ? "bg-white text-black"
-                : "bg-transparent text-gray-500 hover:text-gray-300"
+                ? "bg-[#E8EAE9]"
+                : "bg-[#1B1C20] hover:bg-[#E8EAE9]"
             }`}
           >
             RECENTLY ADDED
@@ -268,34 +304,19 @@ export default function OrganizationsPage() {
             onClick={() => setActiveTab("popular")}
             className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
               activeTab === "popular"
-                ? "bg-white text-black"
-                : "bg-transparent text-gray-500 hover:text-gray-300"
+                ? "bg-[#E8EAE9] "
+                : "bg-[#1B1C20] hover:bg-[#E8EAE9]"
             }`}
           >
             POPULAR
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center gap-3 mb-8">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            placeholder="search for companies..."
-            className="flex-1 bg-transparent border-b border-gray-700 text-gray-400 placeholder-gray-600 py-2 px-2 outline-none focus:border-gray-500 transition-colors"
-          />
-          <button
-            onClick={handleSearch}
-            className="bg-[#2a2a2a] hover:bg-[#333333] transition-colors px-6 py-2 rounded text-gray-400 flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            SEARCH
-          </button>
-        </div>
+        {/* Search Bar Component */}
+        <SearchBar 
+          onSearch={handleSearch}
+          placeholder="search for companies..."
+        />
 
         {/* Organizations List */}
         <div className="space-y-0">

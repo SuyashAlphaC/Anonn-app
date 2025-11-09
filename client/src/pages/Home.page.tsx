@@ -41,7 +41,7 @@ export default function HomePage({
 
   const fetchPosts = useCallback(
     async (page: number = 1, limit: number = 20) => {
-      if (!isAuthenticated) return;
+      // if (!isAuthenticated) return;
 
       setIsLoading(true);
       setError(null);
@@ -79,7 +79,6 @@ export default function HomePage({
         }
 
         const data = await response.json();
-        console.log("post", data);
         if (page === 1) {
           setPosts(data);
         } else {

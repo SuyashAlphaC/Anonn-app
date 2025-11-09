@@ -31,7 +31,32 @@ export default function NotificationsPage() {
   const [filter, setFilter] = useState<"all" | "unread">("all");
   const queryClient = useQueryClient();
   const { user, isAuthenticated: authIsAuthenticated, getAccessToken, refreshProfile } = useAuth();
-  
+
+  // Check authentication first - show connect wallet if not authenticated
+  if (!authIsAuthenticated) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <Card className="bg-[#2a2a2a] border-gray-800 p-12 text-center">
+          <Bell className="h-16 w-16 text-gray-600 mx-auto mb-6" />
+          <h3 className="text-2xl font-bold text-white mb-3">
+            Authentication Required
+          </h3>
+          <p className="text-gray-400 mb-8 max-w-md mx-auto">
+            Please connect your wallet to view your notifications and stay updated with your activity.
+          </p>
+          <Button
+            onClick={() => {
+              const event = new CustomEvent('triggerWalletConnect');
+              window.dispatchEvent(event);
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3"
+          >
+            Connect Wallet
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   // Fetch notifications with proper query function
   const { data: notifications = [], isLoading, error } = useQuery<Notification[]>({
@@ -54,6 +79,7 @@ export default function NotificationsPage() {
       return response.json();
     },
     retry: false,
+    enabled: authIsAuthenticated, // Only fetch when authenticated
   });
 
   // Mark notification as read mutation

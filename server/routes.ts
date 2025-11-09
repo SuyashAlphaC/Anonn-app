@@ -1919,7 +1919,7 @@ app.get('/api/post/own', requireAuth, async (req: any, res) => {
       // Notification logic
       if (voteData.targetType === 'post') {
         const post = await storage.getPost(voteData.targetId);
-        if (post && post.authorId === userId) {
+        if (post && post.authorId !== userId) {
           const notif = await storage.createNotification({
             userId: post.authorId,
             type: voteData.voteType === 'up' ? 'upvote' : 'downvote',

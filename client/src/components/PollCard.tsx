@@ -5,6 +5,7 @@ import { MessageSquare, Triangle, Bookmark, Loader2 } from "lucide-react";
 import { formatTimeAgo } from "@/lib/utils";
 import { PollWithDetails } from "@shared/schema";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 interface PollCardProps {
   poll: PollWithDetails;
@@ -13,6 +14,7 @@ interface PollCardProps {
 
 export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps) {
   const { toast } = useToast();
+  const { isAuthenticated } = useAuth();
   const [poll, setPoll] = useState(initialPoll);
   const [selectedOptions, setSelectedOptions] = useState<number[]>([]);
   const [animatingVote, setAnimatingVote] = useState<"up" | "down" | null>(null);
@@ -137,7 +139,38 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
     },
   });
 
+  // Authentication handler - similar to PostCard
+  const showAuthToast = (action: string) => {
+    toast({
+      title: "Authentication Required",
+      description: `Please connect your wallet to ${action}.`,
+      variant: "default",
+      action: (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            const event = new CustomEvent('triggerWalletConnect');
+            window.dispatchEvent(event);
+          }}
+        >
+          Connect Wallet
+        </Button>
+      ),
+    });
+  };
+
+  const handleAuthRequired = (action: string, callback?: () => void) => {
+    if (!isAuthenticated) {
+      showAuthToast(action);
+      return false;
+    }
+    callback?.();
+    return true;
+  };
+
   const handlePollVote = (voteType: "up" | "down") => {
+    if (!handleAuthRequired("vote on polls")) return;
     if (voteMutation.isPending) return;
 
     setAnimatingVote(voteType);
@@ -145,6 +178,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
   };
 
   const handleVoteOption = (optionId: number, allowMultiple: boolean) => {
+    if (!handleAuthRequired("select poll options")) return;
     if (poll.hasVoted) return;
 
     setSelectedOptions((prev) => {
@@ -159,8 +193,25 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
   };
 
   const handleSubmitVote = () => {
+    if (!handleAuthRequired("submit poll votes")) return;
     if (selectedOptions.length === 0 || pollVoteMutation.isPending) return;
     pollVoteMutation.mutate({ optionIds: selectedOptions });
+  };
+
+  const handlePollClick = () => {
+    if (!handleAuthRequired("view poll details")) return;
+    window.location.href = `/poll?id=${poll.id}`;
+  };
+
+  const handleAuthorClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!handleAuthRequired("view user profiles")) return;
+    window.location.href = `/u/${poll.author.username}`;
+  };
+
+  const handleBookmark = () => {
+    if (!handleAuthRequired("bookmark polls")) return;
+    // Bookmark functionality can be implemented here
   };
 
   const showVoteButton = !poll.hasVoted && selectedOptions.length > 0;
@@ -171,17 +222,20 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
   };
 
   return (
-    <article className="bg-[1a1a1a] border border-gray-600 overflow-hidden">
+    <article className="bg-[#EAEAEA05] border border-[#525252] overflow-hidden">
       {/* Header Section */}
-      <div className="px-4 py-3 bg-[#505050] flex items-center justify-between">
+      <div className="px-4 py-3 text-[#8E8E93] bg-[#525252] flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-white text-base font-normal underline cursor-pointer hover:text-gray-200 transition-colors">
+          <span
+            className=" text-base font-normal underline cursor-pointer hover:text-gray-200 transition-colors"
+            onClick={handleAuthorClick}
+          >
             {poll.author.username || "user1234"}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-gray-300 text-sm">
+          <span className=" text-sm">
             {formatTimeAgo(poll.createdAt)}
           </span>
         </div>
@@ -189,11 +243,11 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
 
       {/* Content Section */}
       <div
-        className="px-6 py-6 cursor-pointer bg-[#1a1a1a]"
-        onClick={() => (window.location.href = `/poll?id=${poll.id}`)}
+        className="px-6 py-6 cursor-pointer"
+        onClick={handlePollClick}
       >
         {/* Poll Title */}
-        <h3 className="text-xl font-normal text-white mb-4 leading-normal">
+        <h3 className="text-xl font-normal text-[#E8EAE9] mb-4 leading-normal">
           {poll.title}
         </h3>
 
@@ -225,7 +279,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
               >
                 {/* Background bar */}
                 <div
-                  className={`relative bg-transparent rounded h-12 flex items-center px-4 overflow-hidden border ${
+                  className={`relative rounded h-12 flex items-center px-4 overflow-hidden border ${
                     isSelected ? "border-blue-500" : "border-gray-600"
                   }`}
                 >
@@ -275,7 +329,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
       </div>
 
       {/* Footer Actions */}
-      <div className="flex items-stretch bg-black border-t border-gray-600">
+      <div className="flex items-stretch border-t border-gray-600">
         {/* Left Side - Upvote/Downvote */}
         <div
           className="flex items-stretch"
@@ -349,6 +403,7 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
           <button
             onClick={(e) => {
               e.stopPropagation();
+              if (!handleAuthRequired("view comments")) return;
               window.location.href = `/poll?id=${poll.id}`;
             }}
             className="flex items-center gap-3 px-8 py-4 text-white hover:bg-gray-800/50 transition-colors"
@@ -359,6 +414,10 @@ export default function PollCard({ poll: initialPoll, onUpdate }: PollCardProps)
           {/* Bookmark Button */}
           <button
             aria-label="Bookmark"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleBookmark();
+            }}
             className="flex items-center justify-center px-8 py-4 text-white hover:bg-gray-800/50 transition-colors"
           >
             <Bookmark className="w-5 h-5" strokeWidth={2} />
