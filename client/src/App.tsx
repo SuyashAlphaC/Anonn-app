@@ -36,7 +36,8 @@ import {HomePage,
   PollsPage,
   PostContent,
   BowlContent,
-  BookmarksPage
+  BookmarksPage,
+  SettingsPage
 } from "./pages/index";
 
 import { ContentLayout, MainLayout } from "./Layout";
@@ -328,12 +329,21 @@ function RouterWithLayout() {
           <BowlContent />
         </MainLayout>
       </Route>
+      <Route path="/settings">
+        <MainLayout 
+          onCreatePost={handleCreatePost}
+          bowls={bowls}
+          organizations={organizations}
+        >
+          <SettingsPage />
+        </MainLayout>
+      </Route>
       
       {/* Routes without Layout */}
       <Route path="/auth" component={RedirectHome} />
       <Route path="/create-post" component={CreatePost} />
       <Route path="/search" component={Search} />
-      <Route path="/settings" component={Settings} />
+      {/* <Route path="/settings" component={Settings} /> */}
       <Route path="/*" component={NotFound} />
     </Switch>
   );

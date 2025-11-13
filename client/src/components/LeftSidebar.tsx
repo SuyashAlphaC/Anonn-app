@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react"; // Added useRef
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,6 +38,7 @@ export default function LeftSidebar({ onCreatePost, onCreateReview }: SidebarPro
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 1024);
+  const profileRef = useRef<HTMLDivElement>(null); // Added ref for profile dropdown
 
   // Check screen size and set initial state
  // Check screen size and set initial state - FIXED VERSION
@@ -110,7 +111,19 @@ useEffect(() => {
   // Calculate unseen notification count
   const unseenNotificationCount = notifications?.filter(n => !n.read).length || 0;
 
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
 
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Main navigation items
   const sidebarItems: Array<{
@@ -137,17 +150,23 @@ useEffect(() => {
     "Consistently Supportive and Dedicated"
   ];
 
-  const handleProfileClick = (e: { preventDefault: () => void; }) => {
+  const handleProfileClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    // Handle profile click
-    const newProfileState = !isProfileOpen;
-    setIsProfileOpen(newProfileState);
-    if (newProfileState) {
+    e.stopPropagation(); // Prevent event bubbling
+    setIsProfileOpen(!isProfileOpen);
+    if (!isProfileOpen) {
       setLocation("/profile");
     }
   };
 
-const handleLogout = async () => {
+  const handleSubmenuClick = (e: React.MouseEvent, href: string) => {
+    e.stopPropagation(); // Prevent event from bubbling to parent
+    setLocation(href);
+    // Don't close the dropdown - keep it open
+  };
+
+const handleLogout = async (e: React.MouseEvent) => {
+  e.stopPropagation(); // Prevent event from bubbling to parent
   try {
     // Call server logout endpoint
     await apiRequest('POST', '/api/auth/logout', {});
@@ -286,7 +305,7 @@ const handleLogout = async () => {
 
             {/* Profile Dropdown */}
             {isAuthenticated && (
-              <div className="relative">
+              <div className="relative" ref={profileRef}>
                 <button
                   onClick={handleProfileClick}
                   className={`relative flex items-center w-full px-3 py-3 text-sm font-normal rounded-lg transition-all duration-200 group ${
@@ -318,27 +337,29 @@ const handleLogout = async () => {
                 {/* Profile Submenu - Only show when sidebar is open */}
                 {isAuthenticated && isProfileOpen && isOpen && (
                   <div className="mt-1 ml-3 space-y-1 border-l border-gray-700 pl-3">
-                    {(isMobile) && <Link
-                      href="/create-post"
-                      className="flex items-center px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
-                    >
-                      <Edit3 className="h-4 w-4 mr-3" />
-                      <span className="text-sm">CREATE</span>
-                    </Link>}
-                    <Link
-                      href="/bookmarks"
-                      className="flex items-center px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
+                    {(isMobile) && (
+                      <button
+                        onClick={(e) => handleSubmenuClick(e, "/create-post")}
+                        className="flex items-center w-full px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
+                      >
+                        <Edit3 className="h-4 w-4 mr-3" />
+                        <span className="text-sm">CREATE</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => handleSubmenuClick(e, "/bookmarks")}
+                      className="flex items-center w-full px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
                     >
                       <Bookmark className="h-4 w-4 mr-3" />
                       <span className="text-sm">BOOKMARKS</span>
-                    </Link>
-                    <Link
-                      href="/settings"
-                      className="flex items-center px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
+                    </button>
+                    <button
+                      onClick={(e) => handleSubmenuClick(e, "/settings")}
+                      className="flex items-center w-full px-3 py-2 text-sm text-gray-400 hover:text-gray-300 hover:bg-[#252525] rounded-lg transition-all duration-200"
                     >
                       <Settings className="h-4 w-4 mr-3" />
                       <span className="text-sm">SETTINGS</span>
-                    </Link>
+                    </button>
                     <button
                       onClick={handleLogout}
                       className="flex items-center w-full px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-[#252525] rounded-lg transition-all duration-200"

@@ -9,6 +9,7 @@ import PollsPage from "./Polls.page";
 import PostContent from "./PostContent.page";
 import BowlContent from "./BowlContent.page";
 import BookmarksPage from "./Bookmark.page";
+import SettingsPage from "./Setting.page";
 
 export {
     HomePage,
@@ -21,5 +22,6 @@ export {
     PollsPage,
     PostContent,
     BowlContent,
-    BookmarksPage
+    BookmarksPage,
+    SettingsPage
 }
