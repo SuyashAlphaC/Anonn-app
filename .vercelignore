@@ -1,49 +1,22 @@
-# Development files
+# Development only
 node_modules/
 .env
 .env.local
 .env.development
-.env.test
+.git/
 
-# Source files (not needed in production)
+# Source files (keep built files!)
 client/src/
 server/
-shared/
-drizzle/
 *.ts
 *.tsx
-*.js.map
+!dist/
 
-# Build artifacts
-dist/
-build/
-
-# Development tools
+# Configs
 vite.config.ts
-vite.config.production.ts
 tsconfig.json
 tailwind.config.ts
 postcss.config.js
-components.json
 
-# Git files
-.git/
-.gitignore
-
-# Documentation
+# Docs
 *.md
-DYNAMIC_AUTH_GUIDE.md
-FIXES_SUMMARY.md
-PRODUCTION_SETUP.md
-SECURITY.md
-
-# Test files
-websocket-test.html
-
-# Logs
-*.log
-npm-debug.log*
-
-# OS generated files
-.DS_Store
-Thumbs.db
